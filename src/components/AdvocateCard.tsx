@@ -1,7 +1,21 @@
-import { MapPin, Star, CheckCircle, Clock, Navigation, MessageSquare } from 'lucide-react';
+import {
+  MapPin,
+  Star,
+  CheckCircle,
+  Clock,
+  Navigation,
+  MessageSquare,
+  Heart,
+} from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Advocate, specializations } from '@/data/advocates';
+
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface AdvocateCardProps {
   advocate: Advocate;
@@ -9,6 +23,86 @@ interface AdvocateCardProps {
 }
 
 const AdvocateCard = ({ advocate, onViewProfile }: AdvocateCardProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const [saved, setSaved] = useState(false);
+
+useEffect(() => {
+  const checkSaved = async () => {
+    if (!user?.id || !advocate?.id) return;
+
+    console.log("CHECKING ADVOCATE:", advocate.id);
+    console.log("USER:", user.id);
+
+    const { data, error } = await supabase
+      .from("saved_advocates")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("advocate_id", advocate.id)
+      .maybeSingle();
+
+    console.log("RESULT:", data, error);
+
+    setSaved(!!data);
+  };
+
+  checkSaved();
+}, [user, advocate.id]);
+
+ const toggleSave = async () => {
+  if (!user?.id || !advocate?.id) {
+    console.error("Missing IDs", {
+      userId: user?.id,
+      advocateId: advocate?.id,
+    });
+    return;
+  }
+
+  try {
+    if (saved) {
+      const { error } = await supabase
+        .from("saved_advocates")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("advocate_id", advocate.id);
+
+      if (error) throw error;
+
+      setSaved(false);
+
+      toast({
+        title: "Removed",
+        description: "Advocate removed from saved list.",
+      });
+    } else {
+      const { error } = await supabase
+        .from("saved_advocates")
+        .insert({
+          user_id: user.id,
+          advocate_id: advocate.id,
+        });
+
+      if (error) throw error;
+
+      setSaved(true);
+
+      toast({
+        title: "Saved",
+        description: "Advocate added to saved list.",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+
+    toast({
+      title: "Error",
+      description: "Unable to update saved advocates.",
+      variant: "destructive",
+    });
+  }
+};
+
   const getSpecializationClass = (spec: string) => {
     const classes: Record<string, string> = {
       criminal: 'specialization-criminal',
@@ -18,6 +112,7 @@ const AdvocateCard = ({ advocate, onViewProfile }: AdvocateCardProps) => {
       cyber: 'specialization-cyber',
       property: 'specialization-property',
     };
+
     return classes[spec] || '';
   };
 
@@ -40,6 +135,7 @@ const AdvocateCard = ({ advocate, onViewProfile }: AdvocateCardProps) => {
               alt={advocate.name}
               className="w-20 h-20 rounded-xl object-cover ring-2 ring-border group-hover:ring-primary/30 transition-all"
             />
+
             {advocate.verified && (
               <div className="absolute -bottom-1 -right-1 bg-card rounded-full p-0.5">
                 <CheckCircle className="w-5 h-5 text-green-500 fill-green-500/20" />
@@ -54,6 +150,7 @@ const AdvocateCard = ({ advocate, onViewProfile }: AdvocateCardProps) => {
                 <h3 className="font-serif font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
                   {advocate.name}
                 </h3>
+
                 <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                   <MapPin className="w-3.5 h-3.5" />
                   <span>{advocate.city}</span>
@@ -63,18 +160,24 @@ const AdvocateCard = ({ advocate, onViewProfile }: AdvocateCardProps) => {
               {/* Rating */}
               <div className="flex items-center gap-1 bg-secondary/10 px-2 py-1 rounded-lg">
                 <Star className="w-4 h-4 text-secondary fill-secondary" />
-                <span className="font-semibold text-sm">{advocate.rating}</span>
+                <span className="font-semibold text-sm">
+                  {advocate.rating}
+                </span>
               </div>
             </div>
 
-            {/* Experience & Cases */}
+            {/* Experience */}
             <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />
                 <span>{advocate.experience} years exp.</span>
               </div>
+
               <div>
-                <span className="font-medium text-foreground">{advocate.casesHandled}</span> cases
+                <span className="font-medium text-foreground">
+                  {advocate.casesHandled}
+                </span>{' '}
+                cases
               </div>
             </div>
 
@@ -96,11 +199,31 @@ const AdvocateCard = ({ advocate, onViewProfile }: AdvocateCardProps) => {
         {/* Footer */}
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
           <div>
-            <span className="text-xs text-muted-foreground">Consultation Fee</span>
-            <p className="font-semibold text-foreground">₹{advocate.consultationFee.toLocaleString()}</p>
+            <span className="text-xs text-muted-foreground">
+              Consultation Fee
+            </span>
+
+            <p className="font-semibold text-foreground">
+              ₹{advocate.consultationFee.toLocaleString()}
+            </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+
+            {/* SAVE BUTTON */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleSave}
+            >
+              <Heart
+                className={`w-4 h-4 ${
+                  saved ? 'fill-red-500 text-red-500' : ''
+                }`}
+              />
+            </Button>
+
+            {/* DIRECTIONS */}
             <a
               href={getDirectionsUrl()}
               target="_blank"
@@ -115,6 +238,8 @@ const AdvocateCard = ({ advocate, onViewProfile }: AdvocateCardProps) => {
                 Directions
               </Button>
             </a>
+
+            {/* PROFILE */}
             <Button
               variant="consultation"
               size="sm"

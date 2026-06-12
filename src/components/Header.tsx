@@ -1,10 +1,18 @@
-import { Scale, Menu, X, LogOut, User, Calendar, Briefcase } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { useAdvocateStatus } from '@/hooks/useAdvocateStatus';
-import { useToast } from '@/hooks/use-toast';
+import {
+  Scale,
+  Menu,
+  X,
+  LogOut,
+  User,
+  Calendar,
+  Briefcase,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdvocateStatus } from "@/hooks/useAdvocateStatus";
+import { useToast } from "@/hooks/use-toast";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -14,21 +22,27 @@ const Header = () => {
   const { isAdvocate } = useAdvocateStatus();
   const { toast } = useToast();
 
-  const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/advocates', label: 'Find Advocates' },
-    { href: '/about', label: 'About' },
+const userNavLinks = [
+  { href: "/", label: "Home" },
+  { href: "/advocates", label: "Find Advocates" },
+  { href: "/user-dashboard", label: "Dashboard" },
+  { href: "/about", label: "About" },
+];
+  const advocateNavLinks = [
+    { href: "/advocate-dashboard", label: "Dashboard" },
   ];
+
+  const navLinks = isAdvocate ? advocateNavLinks : userNavLinks;
 
   const isActive = (path: string) => location.pathname === path;
 
   const handleSignOut = async () => {
     await signOut();
     toast({
-      title: 'Signed Out',
-      description: 'You have been successfully signed out.',
+      title: "Signed Out",
+      description: "You have been successfully signed out.",
     });
-    navigate('/');
+    navigate("/");
     setMobileMenuOpen(false);
   };
 
@@ -45,7 +59,9 @@ const Header = () => {
               <h1 className="font-serif font-bold text-lg text-foreground leading-tight">
                 AdvocateFinder
               </h1>
-              <p className="text-[10px] text-muted-foreground -mt-0.5">Find Legal Help</p>
+              <p className="text-[10px] text-muted-foreground -mt-0.5">
+                Find Legal Help
+              </p>
             </div>
           </Link>
 
@@ -57,8 +73,8 @@ const Header = () => {
                 to={link.href}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive(link.href)
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
                 {link.label}
@@ -72,16 +88,7 @@ const Header = () => {
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
             ) : user ? (
               <>
-                {isAdvocate && (
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/advocate-dashboard')}>
-                    <Briefcase className="w-4 h-4 mr-2" />
-                    Dashboard
-                  </Button>
-                )}
-                <Button variant="ghost" size="sm" onClick={() => navigate('/my-consultations')}>
-                  <Calendar className="w-4 h-4 mr-2" />
-                  My Consultations
-                </Button>
+                
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <User className="w-4 h-4" />
                   <span className="max-w-[120px] truncate">{user.email}</span>
@@ -93,10 +100,17 @@ const Header = () => {
               </>
             ) : (
               <>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/auth")}
+                >
                   English
                 </Button>
-                <Button size="sm" onClick={() => navigate('/register-advocate')}>
+                <Button
+                  size="sm"
+                  onClick={() => navigate("/register-advocate")}
+                >
                   Sign In
                 </Button>
               </>
@@ -126,8 +140,8 @@ const Header = () => {
                   to={link.href}
                   className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                     isActive(link.href)
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -141,27 +155,47 @@ const Header = () => {
                       <User className="w-4 h-4" />
                       <span className="truncate">{user.email}</span>
                     </div>
-                    {isAdvocate && (
-                      <Button variant="ghost" className="justify-start" onClick={() => { navigate('/advocate-dashboard'); setMobileMenuOpen(false); }}>
-                        <Briefcase className="w-4 h-4 mr-2" />
-                        Dashboard
+                    {!isAdvocate && (
+                      <Button
+                        variant="ghost"
+                        className="justify-start"
+                        onClick={() => {
+                          navigate("/my-consultations");
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        <Calendar className="w-4 h-4 mr-2" />
+                        My Consultations
                       </Button>
                     )}
-                    <Button variant="ghost" className="justify-start" onClick={() => { navigate('/my-consultations'); setMobileMenuOpen(false); }}>
-                      <Calendar className="w-4 h-4 mr-2" />
-                      My Consultations
-                    </Button>
-                    <Button variant="ghost" className="justify-start" onClick={handleSignOut}>
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      onClick={handleSignOut}
+                    >
                       <LogOut className="w-4 h-4 mr-2" />
                       Logout
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Button variant="ghost" className="justify-start" onClick={() => { navigate('/auth'); setMobileMenuOpen(false); }}>
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      onClick={() => {
+                        navigate("/auth");
+                        setMobileMenuOpen(false);
+                      }}
+                    >
                       English
                     </Button>
-                    <Button className="justify-start" onClick={() => { navigate('/register-advocate'); setMobileMenuOpen(false); }}>
+                    <Button
+                      className="justify-start"
+                      onClick={() => {
+                        navigate("/register-advocate");
+                        setMobileMenuOpen(false);
+                      }}
+                    >
                       Sign In
                     </Button>
                   </>
@@ -176,7 +210,8 @@ const Header = () => {
       <div className="bg-secondary/10 border-t border-secondary/20">
         <div className="container mx-auto px-4 py-1.5">
           <p className="text-[11px] text-center text-muted-foreground">
-            ⚠️ <strong>Disclaimer:</strong> This is a conceptual prototype for learning purposes only. Not a real legal service.
+            ⚠️ <strong>Disclaimer:</strong> This is a conceptual prototype for
+            learning purposes only. Not a real legal service.
           </p>
         </div>
       </div>

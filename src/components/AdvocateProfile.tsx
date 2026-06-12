@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Advocate, specializations } from '@/data/advocates';
 import { useAdvocateSummary } from '@/hooks/useAdvocateSummary';
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AdvocateProfileProps {
   advocate: Advocate;
@@ -12,6 +15,8 @@ interface AdvocateProfileProps {
 }
 
 const AdvocateProfile = ({ advocate, onClose }: AdvocateProfileProps) => {
+  const navigate = useNavigate();
+  const { user } = useAuth(); 
   const { getSummary, isLoading, getCachedSummary } = useAdvocateSummary();
   const [summary, setSummary] = useState<{ shortBio: string; highlights: string[]; expertiseAreas: string } | null>(null);
   const [bookingOpen, setBookingOpen] = useState(false);
@@ -46,6 +51,97 @@ const AdvocateProfile = ({ advocate, onClose }: AdvocateProfileProps) => {
   const getDirectionsUrl = () => {
     return `https://www.google.com/maps/dir/?api=1&destination=${advocate.latitude},${advocate.longitude}&travelmode=driving`;
   };
+
+const handleStartChat = async () => {
+  if (!user) {
+    console.error("User not logged in");
+    return;
+  }
+
+  try {
+    // Get logged-in user's profile
+    const { data: profile, error: profileError } =
+      await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    if (profileError || !profile) {
+      console.error("PROFILE ERROR:", profileError);
+      return;
+    }
+
+    console.log("PROFILE ID:", profile.id);
+    console.log("ADVOCATE ID:", advocate.id);
+    console.log("ADVOCATE USER ID:", advocate.user_id);
+
+    // Check if conversation already exists
+    const { data: existingConversation, error: existingError } =
+      await (supabase as any)
+        .from("conversations")
+        .select("*")
+        .eq("user_id", profile.id)
+        .eq("advocate_id", advocate.user_id)
+        .maybeSingle();
+
+    if (existingError) {
+      console.error(
+        "EXISTING CONVERSATION ERROR:",
+        existingError
+      );
+    }
+
+    if (existingConversation) {
+      console.log(
+        "FOUND EXISTING:",
+        existingConversation
+      );
+
+      navigate(
+        `/messages?conversation=${existingConversation.id}`
+      );
+
+      return;
+    }
+
+    // Create new conversation
+    const {
+      data: newConversation,
+      error: insertError,
+    } = await (supabase as any)
+      .from("conversations")
+      .insert({
+        user_id: profile.id,
+        advocate_id: advocate.user_id,
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error(
+        "INSERT ERROR:",
+        insertError
+      );
+      return;
+    }
+
+    console.log(
+      "NEW CONVERSATION:",
+      newConversation
+    );
+
+    console.log(
+  "INSERT ERROR:",
+  insertError
+);
+    navigate(
+      `/messages?conversation=${newConversation.id}`
+    );
+  } catch (error) {
+    console.error("CHAT ERROR:", error);
+  }
+};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
@@ -229,6 +325,9 @@ const AdvocateProfile = ({ advocate, onClose }: AdvocateProfileProps) => {
                 <Button variant="consultation" size="lg" className="gap-2" onClick={() => setBookingOpen(true)}>
                   <Calendar className="w-4 h-4" />
                   Book Consultation
+                </Button>
+                <Button variant="outline" onClick={handleStartChat}>
+                  Start Chat
                 </Button>
               </div>
             </div>

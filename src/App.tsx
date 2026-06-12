@@ -12,6 +12,9 @@ import RegisterAdvocate from "./pages/RegisterAdvocate";
 import MyConsultations from "./pages/MyConsultations";
 import AdvocateDashboard from "./pages/AdvocateDashboard";
 import NotFound from "./pages/NotFound";
+import SavedAdvocates from "./pages/SavedAdvocates";
+import UserDashboard from "./pages/UserDashboard";
+import Messages from "./pages/Messages";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +33,9 @@ const App = () => (
             <Route path="/register-advocate" element={<RegisterAdvocate />} />
             <Route path="/my-consultations" element={<MyConsultations />} />
             <Route path="/advocate-dashboard" element={<AdvocateDashboard />} />
+            <Route path="/saved-advocates" element={<SavedAdvocates />} />
+            <Route path="/user-dashboard" element={<UserDashboard />} />
+            <Route path="/messages" element={<Messages />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

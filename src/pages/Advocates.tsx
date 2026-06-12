@@ -66,6 +66,7 @@ const Advocates = () => {
 
     const formattedAdvocates = (data || []).map((advocate: any) => ({
   id: advocate.id,
+  user_id: advocate.user_id,
 
   name:
     advocate.profiles?.full_name ||
