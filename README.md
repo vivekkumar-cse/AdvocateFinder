@@ -27,8 +27,8 @@ A conceptual prototype web app to help users discover advocates, classify their 
 - **Styling:** Tailwind CSS v3 + shadcn/ui + Radix UI
 - **Routing:** React Router v6
 - **Data:** TanStack Query
-- **Backend:** Lovable Cloud (Supabase) — Auth, Postgres, Edge Functions
-- **AI:** Lovable AI Gateway (Google Gemini)
+- **Backend:** Supabase — Auth, Postgres, Edge Functions
+- **AI:** AI Gateway (Groq)
 
 ---
 
@@ -65,7 +65,7 @@ npm install
 (or `bun install` if you use Bun)
 
 ### 5. Configure environment variables
-A `.env` file is already included with the public Lovable Cloud keys:
+A `.env` file is already included with the public Supabase Cloud keys:
 ```env
 VITE_SUPABASE_PROJECT_ID="hzzgnyucgtpvrdzljela"
 VITE_SUPABASE_PUBLISHABLE_KEY="<public anon key>"
@@ -180,7 +180,6 @@ AI **does NOT**:
 - **Port 8080 already in use** → stop the other process or change the port in `vite.config.ts`.
 - **`npm install` fails** → delete `node_modules` and `package-lock.json`, then run `npm install` again.
 - **Blank page / auth errors** → make sure the `.env` file exists at the project root and the dev server was restarted after edits.
-- **AI features not working** → the edge functions live on Lovable Cloud; they require the project to be deployed via Lovable. Locally the UI runs, but AI calls hit the hosted backend.
 
 ---
 
